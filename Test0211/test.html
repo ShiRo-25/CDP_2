@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Load data from an external GeoJSON file</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
+<style>
+body { margin: 0; padding: 0; }
+#map { position: absolute; top: 0; bottom: 0; width: 100%; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<script>
+    mapboxgl.accessToken = 'pk.eyJ1Ijoic2hpcm8tcmFyZSIsImEiOiJjbHNqNG9wdTYyaDI2MmxvMGh2d3RvcjRxIn0.a5--rPxvpO_kTz5w0TehHw';
+    const map = new mapboxgl.Map({
+        container: 'map', // container ID
+        style: 'mapbox://styles/shiro-rare/clshr0m2o03ju01p5hfrk8qqb', // style URL
+        projection: 'globe', // Display the map as a globe
+        zoom: 10, // starting zoom
+        center: [-73.975, 40.7] // starting center in [lng, lat]
+    });
+
+    map.on('load', () => {
+        map.setFog({}); // Set the default atmosphere style
+
+        // Adding the source for taxi zones
+        map.addSource('taxi-zones', {
+            'type': 'geojson',
+            'data': 'test.geojson' // Path to your GeoJSON file
+        });
+
+        // Add the fill layer for taxi zones
+        map.addLayer({
+            'id': 'taxi-zones-layer',
+            'type': 'fill',
+            'source': 'taxi-zones',
+            'paint': {
+                'fill-color': [
+                    'case',
+                    ['boolean', ['feature-state', 'clicked'], false],
+                    '#ff0000', // Color when clicked
+                    '#627BC1'  // Default color
+                ],
+                'fill-outline-color': '#000000',
+                'fill-opacity': 0.5
+            }
+        });
+
+        // Add the border layer for taxi zones
+        map.addLayer({
+            'id': 'taxi-zones-layer-borders',
+            'type': 'line',
+            'source': 'taxi-zones',
+            'paint': {
+                'line-color': '#627BC1',
+                'line-width': 3
+            }
+        });
+
+        // Add the label layer for taxi zones
+        map.addLayer({
+            'id': 'taxi-zones-label',
+            'type': 'symbol',
+            'source': 'taxi-zones',
+            'layout': {
+                'text-field': [
+                    'concat',
+                    ['to-string', ['/', ['round', ['*', ['to-number', ['get', 'average_fee']], 100]], 100]],
+                    ' $'
+                ],
+                'text-size': 10,
+                'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
+                'text-radial-offset': 0.5,
+                'text-justify': 'auto'
+            },
+            'paint': {
+                'text-color': '#000000',
+                'text-opacity': 0.9
+            }
+        });
+
+        // Change cursor to pointer when user hovers over clickable layers
+        map.on('mouseenter', 'taxi-zones-layer', () => {
+            map.getCanvas().style.cursor = 'pointer';
+        });
+        map.on('mouseleave', 'taxi-zones-layer', () => {
+            map.getCanvas().style.cursor = '';
+        });
+
+        // Add an empty source for migration lines, to be filled on click
+        map.addSource('migration-lines', {
+            'type': 'geojson',
+            'data': {
+                'type': 'FeatureCollection',
+                'features': []
+            }
+        });
+
+        // Add layer for migration lines
+        map.addLayer({
+            'id': 'migration-lines-layer',
+            'type': 'line',
+            'source': 'migration-lines',
+            'paint': {
+                'line-width': 2,
+                'line-color': ['get', 'color'] // Color set by feature properties
+            }
+        });
+
+                    // Click event listener for taxi zones layer
+                    // Add click event listener for 'taxi-zones-layer'
+                    
+                    map.on('click', 'taxi-zones-layer', function (e) {
+    if (e.features.length > 0) {
+        const clickedFeature = e.features[0];
+
+        // Assuming 'taxi-zones' is the ID of the source containing all zone features.
+        // This might need adjustment based on how your GeoJSON is structured and added to the map.
+        const allFeatures = map.querySourceFeatures('taxi-zones', {
+            sourceLayer: 'test.geojson' // Only needed if your data is in a vector tile source
+        });
+
+        // Debugging output
+        console.log('Clicked Feature:', clickedFeature);
+        console.log('All Features:', allFeatures);
+
+        const migrationLines = calculateMigrationLines(clickedFeature, allFeatures);
+        if (migrationLines.features.length > 0) {
+            map.getSource('migration-lines').setData(migrationLines);
+        } else {
+            console.log('No migration lines calculated.');
+        }
+    }
+});
+
+
+
+                function calculateMigrationLines(clickedFeature, allFeatures) {
+    // 提取点击Feature的中心坐标
+    const sourceCoordinates = getCoordinatesFromWKT(clickedFeature.properties.centroid_wkt);
+
+    let features = [];
+
+    clickedFeature.properties.population_exchange.forEach((exchange, index) => {
+        // 跳过为0的交换量
+        if (exchange === 0) return;
+
+        // 目标区域的objectid假设是数组索引+1
+        const targetObjectId = index + 1;
+        
+        // 从所有特征中找到目标特征
+        const targetFeature = allFeatures.find(feature => parseInt(feature.properties.objectid) === targetObjectId);
+        if (!targetFeature) return;
+
+        // 获取目标特征的中心坐标
+        const targetCoordinates = getCoordinatesFromWKT(targetFeature.properties.centroid_wkt);
+
+        // 根据交换量的正负决定线条的颜色
+        const color = exchange > 0 ? '#00ff00' : '#ff0000'; // 正数为流入（绿色），负数为流出（红色）
+
+        features.push({
+            "type": "Feature",
+            "properties": {
+                "color": color
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [sourceCoordinates, targetCoordinates]
+            }
+        });
+    });
+
+    return {
+        "type": "FeatureCollection",
+        "features": features
+    };
+}
+
+// 从WKT字符串获取坐标的简化函数
+function getCoordinatesFromWKT(wkt) {
+    const match = wkt.match(/POINT \(([^ ]+) ([^ ]+)\)/);
+    return [parseFloat(match[1]), parseFloat(match[2])];
+}
+
+});                 
+
+</script>
+</body>
+</html>

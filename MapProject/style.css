@@ -1,0 +1,114 @@
+#map {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+}
+  
+#controls {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1;
+    background: white;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  
+  #dayTypeSelection {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 10px;
+  }
+  
+  #dayTypeSelection input[type=checkbox] {
+    /* 使用自定义样式替代默认复选框 */
+    -webkit-appearance: none;
+    appearance: none;
+    width: 40px;
+    height: 20px;
+    background: #ccc;
+    border-radius: 10px;
+    position: relative;
+  }
+  
+  #dayTypeSelection input[type=checkbox]:checked::before {
+    transform: translateX(20px);
+    background: #2196F3;
+  }
+  
+  #dayTypeSelection input[type=checkbox]::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+  }
+
+  #mapLegend {
+    position: absolute;
+    top: 100px; /* 调整这个值以确保图例位于#controls的下方 */
+    left: 10px;
+    right: 10px; /* 与#controls保持一致，以匹配宽度 */
+    z-index: 1;
+    width:300px;
+    display: block
+}
+
+.gradient-bar {
+    width: 100%;
+    height: 20px;
+    border-radius: 5px;
+    background: linear-gradient(to right, blue, white 50%, red);
+    margin-bottom: 5px;
+}
+
+.legend-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+}
+  
+/* Time Slider Container */
+#timeSliderContainer {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 20px;
+    width: 50%; /* 或根据需求调整为更大的百分比 */
+    text-align: center;
+  }
+
+  #timeSlider {
+    width: 100%;
+  }
+  
+  #timePeriod {
+    display: block;
+    margin-top: 10px;
+  }
+  
+  #dataSelection {
+    display: flex;
+    justify-content: center;
+    gap: 75px;
+    margin-top: 10px;
+  }
+  
+  .dataGroup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .dataGroup span {
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+

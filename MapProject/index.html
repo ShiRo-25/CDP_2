@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
+<link href="style.css" rel="stylesheet">
+</head>
+<body>
+<div id="map"></div>
+<div id="controls">
+    <!-- Season Selection -->
+    <div id="seasonSelection">
+      <label><input type="radio" name="season" value="spring" checked> Spring</label>
+      <label><input type="radio" name="season" value="summer"> Summer</label>
+      <label><input type="radio" name="season" value="autumn"> Autumn</label>
+      <label><input type="radio" name="season" value="winter"> Winter</label>
+    </div>
+  
+    <!-- Day Type Selection (Weekdays/Weekend) -->
+    <div id="dayTypeSelection">
+      <label>Weekdays</label><input type="checkbox" id="dayType"><label>Weekend</label>
+    </div>
+</div>
+
+<div id="mapLegend" style="display: none;">
+  <div class="gradient-bar"></div>
+  <div class="legend-labels">
+      <span>Move Out To</span>
+      <span>Move In From</span>
+  </div>
+</div>
+  
+<!-- Time Slider -->
+<div id="timeSliderContainer">
+    <input type="range" id="timeSlider" min="0" max="23" value="12">
+    <span id="timePeriod">Time Period: 12:00~13:00</span>
+    <button id="playButton">Play</button>
+  
+    <!-- Data Selection for Pick-up and Drop-off -->
+    <div id="dataSelection">
+      <div class="dataGroup">
+        <span>Pick-up:</span>
+        <label><input type="radio" name="dataVisual" value="pu_average_fee" checked> Average Fee</label>
+        <label><input type="radio" name="dataVisual" value="pu_average_dis"> Average Distance</label>
+      </div>
+      <div class="dataGroup">
+        <span>Drop-off:</span>
+        <label><input type="radio" name="dataVisual" value="do_average_fee"> Average Fee</label>
+        <label><input type="radio" name="dataVisual" value="do_average_dis"> Average Distance</label>
+      </div>
+    </div>
+  </div>
+
+<div id="info-box" style="display: none; position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.8); padding: 10px; border-radius: 5px; max-width: 200px;"></div>
+
+
+<script src="script.js"></script>
+</body>
+</html>
